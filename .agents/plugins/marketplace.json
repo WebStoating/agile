@@ -1,0 +1,20 @@
+{
+  "name": "agile-dev",
+  "interface": {
+    "displayName": "agile (local development)"
+  },
+  "plugins": [
+    {
+      "name": "agile",
+      "source": {
+        "source": "local",
+        "path": "./agile"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}
