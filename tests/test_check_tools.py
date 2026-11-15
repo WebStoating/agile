@@ -29,7 +29,8 @@ class VersionAndHintTests(unittest.TestCase):
         self.assertIn("brew install ffmpeg", tools.install_hint("ffmpeg", "darwin"))
         self.assertIn("apt install ffmpeg", tools.install_hint("ffmpeg", "linux"))
         self.assertIn("winget install Gyan.FFmpeg", tools.install_hint("ffmpeg", "win32"))
-        for plat in ("darwin", "linux", "win32"):
+        self.assertIn("brew install openai-whisper", tools.install_hint("whisper", "darwin"))
+        for plat in ("linux", "win32"):
             self.assertIn("pipx install openai-whisper", tools.install_hint("whisper", plat))
 
 
@@ -58,7 +59,7 @@ class CheckAllTests(unittest.TestCase):
         cli = subprocess.run([sys.executable, "-I", str(SCRIPTS / "check_tools.py")],
                              env=env, capture_output=True, text=True)
         self.assertEqual(cli.returncode, 1)
-        self.assertIn("pipx install openai-whisper", cli.stdout)
+        self.assertIn(tools.install_hint("whisper", sys.platform), cli.stdout)
 
     def test_old_ffmpeg(self):
         res = tools.check_all(self.env({"ffmpeg": version_stub("ffmpeg version 4.4.2-0ubuntu0"),

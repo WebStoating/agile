@@ -28,8 +28,10 @@ def whisper_cache_dir(env: Mapping[str, str]) -> Path:
 
 def install_hint(tool: str, platform: str) -> str:
     if tool == "whisper":
-        return ("install the openai-whisper CLI: pipx install openai-whisper "
-                "(or: python3 -m pip install -U openai-whisper); the turbo model needs version 20240930 or newer")
+        cmd = ("brew install openai-whisper (https://formulae.brew.sh/formula/openai-whisper)"
+               if platform == "darwin" else
+               "pipx install openai-whisper (or: python3 -m pip install -U openai-whisper)")
+        return f"install the openai-whisper CLI: {cmd}; the turbo model needs version 20240930 or newer"
     if platform == "darwin":
         cmd = "brew install ffmpeg"
     elif platform.startswith("win"):
