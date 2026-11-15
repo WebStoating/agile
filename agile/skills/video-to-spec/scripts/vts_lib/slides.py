@@ -2,7 +2,7 @@
 import re
 from typing import Callable, List, Optional, Tuple
 
-THRESHOLDS = (0.1, 0.05, 0.02)
+THRESHOLDS = (0.02, 0.05, 0.1)  # most sensitive first; text-only slide changes score ~0.05
 MIN_GAP = 1.0          # seconds; scene changes closer than this are one change
 SECONDS_PER_SLIDE = 3  # plausibility: at most one change per 3 s of video on average
 OFFSET = 0.4           # take the frame this long before the next slide change

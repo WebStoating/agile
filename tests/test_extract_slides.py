@@ -24,10 +24,15 @@ class PureTests(unittest.TestCase):
         self.assertEqual(slides.collapse([1.0, 1.5, 4.0, 4.2, 9.0]), [1.0, 4.0, 9.0])
 
     def test_choose_changes(self):
-        fake = {0.1: [], 0.05: [4.0, 8.0], 0.02: [1.0, 4.0, 8.0]}
-        self.assertEqual(slides.choose_changes(12.0, lambda t: fake[t]), (0.05, [4.0, 8.0]))
         many = [i * 0.5 + 0.5 for i in range(50)]
+        fake = {0.02: many, 0.05: [4.0, 8.0], 0.1: []}
+        self.assertEqual(slides.choose_changes(12.0, lambda t: fake[t]), (0.05, [4.0, 8.0]))
         self.assertEqual(slides.choose_changes(30.0, lambda t: many), (None, []))
+
+    def test_choose_changes_prefers_most_sensitive(self):
+        """Text-only slide changes score ~0.05; the most sensitive plausible threshold must win."""
+        fake = {0.02: [5.0, 10.0], 0.05: [5.0], 0.1: []}
+        self.assertEqual(slides.choose_changes(15.0, lambda t: fake[t]), (0.02, [5.0, 10.0]))
 
     def test_slide_windows(self):
         w = slides.slide_windows([4.0, 8.0], 12.0)
