@@ -14,7 +14,11 @@ def probe(video: Path) -> dict:
     data = json.loads(out.stdout or "{}")
     streams = data.get("streams", [])
     vids = [s for s in streams if s.get("codec_type") == "video"]
+    # The container duration is the longest stream; recorders often keep audio running after the last
+    # picture frame, and grabbing a frame past the picture yields nothing. Prefer the video stream's own.
     duration = float(data.get("format", {}).get("duration") or 0.0)
+    if vids and float(vids[0].get("duration") or 0.0) > 0:
+        duration = float(vids[0]["duration"])
     return {
         "duration": duration,
         "width": int(vids[0].get("width", 0)) if vids else 0,
