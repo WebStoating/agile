@@ -13,6 +13,7 @@ from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+from vts_lib.console import safe_stdout  # noqa: E402
 from vts_lib.media import probe  # noqa: E402
 from vts_lib.proc import ToolError, run  # noqa: E402
 from vts_lib.transcript import audio_cmd, fingerprint, now, whisper_cmd, write_status  # noqa: E402
@@ -42,6 +43,7 @@ def whisper(wav: Path, out: Path, model: str, translate: bool) -> dict:
 
 
 def main(argv=None) -> int:
+    safe_stdout()
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("video", type=Path)
     ap.add_argument("--out", type=Path, required=True)

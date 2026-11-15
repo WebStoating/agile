@@ -11,10 +11,12 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+from vts_lib.console import safe_stdout  # noqa: E402
 from vts_lib.tools import MODEL_SIZES, check_all  # noqa: E402
 
 
 def main(argv=None) -> int:
+    safe_stdout()
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--json", action="store_true", help="print the result as JSON")
     args = ap.parse_args(argv)

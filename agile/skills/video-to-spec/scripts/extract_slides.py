@@ -14,6 +14,7 @@ from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+from vts_lib.console import safe_stdout  # noqa: E402
 from vts_lib import slides as S  # noqa: E402
 from vts_lib.media import detect_scenes, grab_frame, probe, thumb  # noqa: E402
 from vts_lib.proc import ToolError  # noqa: E402
@@ -28,7 +29,7 @@ def print_table(index: dict) -> None:
     print("| file | time range | frame at |")
     print("|---|---|---|")
     for s in index["slides"]:
-        print(f"| {s['file']} | {mmss(s['start'])}–{mmss(s['end'])} | {mmss(s['frame_time'])} |")
+        print(f"| {s['file']} | {mmss(s['start'])}-{mmss(s['end'])} | {mmss(s['frame_time'])} |")
 
 
 def extract(video: Path, out: Path, mode: str, offset: float) -> dict:
@@ -81,6 +82,7 @@ def retake(video: Path, out: Path, n: int, at: float) -> dict:
 
 
 def main(argv=None) -> int:
+    safe_stdout()
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("video", type=Path)
     ap.add_argument("--out", type=Path, required=True)
