@@ -28,7 +28,9 @@ Output goes to `./<video-name>-spec/`: `SPECIFICATION.md`, `transcript.txt`, `tr
 - Python 3.9+ (the scripts use only the standard library).
 - ffmpeg 5.1+ with ffprobe — macOS `brew install ffmpeg`, Debian/Ubuntu `sudo apt install ffmpeg`,
   Windows `winget install Gyan.FFmpeg`.
-- openai-whisper CLI (20240930 or newer, for the `turbo` model) — `pipx install openai-whisper`.
+- openai-whisper CLI (20240930 or newer, for the `turbo` model) — on macOS with Homebrew,
+  `brew install openai-whisper` ([formula](https://formulae.brew.sh/formula/openai-whisper)); elsewhere
+  `pipx install openai-whisper`.
   The first transcription downloads the turbo model (~1.5 GB); non-English narration also downloads
   `medium` (~1.4 GB).
 
