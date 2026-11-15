@@ -8,8 +8,9 @@ SECONDS_PER_SLIDE = 3  # plausibility: at most one change per 3 s of video on av
 OFFSET = 0.4           # take the frame this long before the next slide change
 LONG_EDGE = 1568       # largest long edge vision models read at full detail
 INTERVAL = 5.0         # seconds between frames when the video is not a slide deck
-THUMB_W, THUMB_H = 32, 18
-DEDUPE_THRESHOLD = 6.0  # mean absolute gray difference (0-255) below which two frames are duplicates
+THUMB_W, THUMB_H = 160, 90
+PIXEL_LEVEL = 32         # a thumbnail pixel "changed" when its gray value moves by more than this
+DEDUPE_THRESHOLD = 0.003  # frames are duplicates when under 0.3% of pixels changed (one short text line is ~0.5%)
 
 _PTS_RE = re.compile(r"pts_time:([0-9.]+)")
 
@@ -60,14 +61,14 @@ def interval_times(duration: float, step: float = INTERVAL) -> List[float]:
     return times or [0.0]
 
 
-def mean_abs_diff(a: bytes, b: bytes) -> float:
+def changed_fraction(a: bytes, b: bytes, level: int = PIXEL_LEVEL) -> float:
     n = min(len(a), len(b))
-    return sum(abs(x - y) for x, y in zip(a[:n], b[:n])) / n if n else 255.0
+    return sum(1 for x, y in zip(a[:n], b[:n]) if abs(x - y) > level) / n if n else 1.0
 
 
 def dedupe(thumbs: List[bytes], threshold: float = DEDUPE_THRESHOLD) -> List[int]:
     kept: List[int] = []
     for i, t in enumerate(thumbs):
-        if not kept or mean_abs_diff(thumbs[kept[-1]], t) > threshold:
+        if not kept or changed_fraction(thumbs[kept[-1]], t) >= threshold:
             kept.append(i)
     return kept

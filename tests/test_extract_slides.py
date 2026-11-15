@@ -55,9 +55,31 @@ class PureTests(unittest.TestCase):
         self.assertEqual(slides.interval_times(12.0), [0.0, 5.0, 10.0])
 
     def test_dedupe(self):
-        a, a2, b = bytes([100]) * 576, bytes([102]) * 576, bytes([200]) * 576
-        self.assertEqual(slides.mean_abs_diff(a, b), 100.0)
+        n = slides.THUMB_W * slides.THUMB_H
+        a, a2, b = bytes([100]) * n, bytes([102]) * n, bytes([200]) * n
+        self.assertEqual(slides.changed_fraction(a, b), 1.0)
+        self.assertEqual(slides.changed_fraction(a, a2), 0.0)
         self.assertEqual(slides.dedupe([a, a2, b, b, a]), [0, 2, 4])
+
+    def test_dedupe_keeps_text_only_change(self):
+        """Two slides on the same background that differ in one short line of text are different slides."""
+        w, h = slides.THUMB_W, slides.THUMB_H
+        page = bytearray([255]) * (w * h)
+        other = bytearray(page)
+        for y in range(h // 2, h // 2 + max(2, h // 30)):          # one text line, ~1/3 of the width
+            for x in range(w // 3, 2 * w // 3, 2):                 # glyph-like: every other pixel dark
+                other[y * w + x] = 0
+        self.assertEqual(slides.dedupe([bytes(page), bytes(other)]), [0, 1])
+
+    def test_table_is_ascii(self):
+        import extract_slides
+        import io
+        import contextlib
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            extract_slides.print_table({"mode": "slides", "threshold": 0.02, "slides": [
+                {"file": "frames/slide_01.jpg", "start": 0.0, "end": 5.0, "frame_time": 4.6}]})
+        buf.getvalue().encode("ascii")
 
 
 @unittest.skipUnless(shutil.which("ffmpeg") and shutil.which("ffprobe"), "ffmpeg not installed")
@@ -113,6 +135,52 @@ class ExtractSlidesIntegrationTests(unittest.TestCase):
         self.assertEqual(self.index(out)["slides"][1]["frame_time"], 5.0)
         self.assertEqual(self.run_cli(out, "--retake", "9", "--at", "1").returncode, 1)
         self.assertEqual(self.run_cli(out, "--retake", "1", "--at", "99").returncode, 1)
+
+    def make_raw_video(self, name, slides_px, seconds_each=5, extra_audio=0):
+        """White 640x360 slides; each slide is a list of (x0, x1, y0, y1) dark text-like bars."""
+        w, h, fps = 640, 360, 5
+        frames = bytearray()
+        for bars in slides_px:
+            img = bytearray([255]) * (w * h)
+            for x0, x1, y0, y1 in bars:
+                for y in range(y0, y1):
+                    for x in range(x0, x1, 3):
+                        img[y * w + x] = 0
+            frames += bytes(img) * (fps * seconds_each)
+        dur = len(slides_px) * seconds_each
+        path = self.tmp / name
+        subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "gray",
+                        "-s", f"{w}x{h}", "-r", str(fps), "-i", "-",
+                        "-f", "lavfi", "-t", str(dur + extra_audio), "-i", "anullsrc=r=16000:cl=mono",
+                        "-map", "0:v", "-map", "1:a", "-c:v", "mpeg4", "-q:v", "2", "-pix_fmt", "yuv420p",
+                        str(path)], input=bytes(frames), check=True)
+        return path
+
+    def run_on(self, video, out, *extra):
+        return subprocess.run([sys.executable, "-I", str(SCRIPTS / "extract_slides.py"), str(video),
+                               "--out", str(out), *extra], capture_output=True, text=True)
+
+    def test_interval_mode_keeps_text_only_slides(self):
+        title = (200, 440, 60, 90)
+        video = self.make_raw_video("text deck.mp4", [[title, (120, 360, 200, 215)],
+                                                      [title, (120, 520, 200, 215)],
+                                                      [title, (120, 300, 240, 255)]])
+        out = self.new_out()
+        r = self.run_on(video, out, "--mode", "interval")
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertEqual(len(self.index(out)["slides"]), 3)
+
+    def test_audio_longer_than_video(self):
+        video = self.make_raw_video("long audio.mp4", [[(100, 500, 100, 140)], [(100, 500, 200, 240)]],
+                                    extra_audio=4)
+        for mode in ("auto", "slides", "interval"):
+            out = self.new_out()
+            r = self.run_on(video, out, "--mode", mode)
+            self.assertEqual(r.returncode, 0, f"{mode}: {r.stdout}{r.stderr}")
+            idx = self.index(out)
+            self.assertLessEqual(idx["duration"], 10.5, mode)
+            for s in idx["slides"]:
+                self.assertGreater((out / s["file"]).stat().st_size, 0)
 
     def test_interval_mode(self):
         out = self.new_out()

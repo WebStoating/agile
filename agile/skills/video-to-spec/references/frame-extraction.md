@@ -19,8 +19,12 @@
 ## Interval mode (screen recordings, talking heads)
 
 When no threshold gives a plausible count (or with `--mode interval`), the script takes a frame every 5
-seconds, compares tiny grayscale thumbnails of neighbouring frames, and drops near-duplicates. Two frames
-that differ only in colour at the same brightness can be merged; re-take one if that matters.
+seconds, compares small grayscale thumbnails of neighbouring frames, and drops a frame as a duplicate only when
+almost no pixels changed (under 0.3%). One changed line of text is enough to keep a frame, so expect some
+extra near-identical frames (for example from a webcam corner); skip those when writing the slide table.
+
+Durations come from the video stream, not the container, so audio that runs on after the last picture frame
+does not break extraction.
 
 ## slides.json
 
@@ -40,5 +44,5 @@ Fill in `title` after looking at each frame.
 | Two slides were merged into one (a change was missed) | Look at the merged range, then re-take or rerun with `--mode slides`; add the missing slide's content to the spec from the transcript. |
 | Far too many "slides" (animations, video inside a slide) | Rerun with `--mode interval`. |
 | `--mode slides` says too many scene changes | The video is not a static deck; use `--mode interval`. |
-| Speaker video in a corner causes constant changes | Use `--mode interval`; the duplicate check ignores small movement. |
+| Speaker video in a corner causes constant changes | Use `--mode interval`, then ignore near-identical frames when building the slide table. |
 | Error "no readable video stream" | The file is audio-only or damaged; ask the user for the original video. |
