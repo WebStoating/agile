@@ -177,7 +177,8 @@ python3 -I "<skill-dir>/scripts/deck.py" finalize --deck "<run_dir>/deck.json" -
 ```
 
 It measures every audio file, writes `durationInSeconds` into the deck and prints the slide count and the
-total seconds. If it reports missing audio, voice those slides and run it again.
+total seconds. If it reports missing audio, voice those slides and run it again. If it reports that the
+narration changed on a slide, the deck was edited after `prepare`: start this step again from `prepare`.
 
 ## Step 5: Render
 

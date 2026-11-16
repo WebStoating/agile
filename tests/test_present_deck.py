@@ -222,6 +222,21 @@ class DeckTests(unittest.TestCase):
         d = make_deck(1); d["theme"]["logo"] = 7; cases.append(d)
         self._assert_invalid(cases)
 
+    def test_finalize_rejects_changed_narration(self):
+        deck = make_deck(2)
+        dk.prepare(deck, self.public, self.tmp)
+        for s in deck["slides"]:
+            (self.public / s["audio"]).write_bytes(b"x")
+        deck["slides"][1]["narration"] = "Edited after prepare"
+        with self.assertRaises(dk.DeckError) as cm:
+            dk.finalize(deck, self.public, probe=lambda p: 1.0)
+        self.assertIn("narration changed on slide 1; run prepare", str(cm.exception))
+        deck = make_deck(1)
+        deck["slides"][0]["audio"] = "audio/other.mp3"
+        (self.public / "audio" / "other.mp3").write_bytes(b"x")
+        with self.assertRaises(dk.DeckError):
+            dk.finalize(deck, self.public, probe=lambda p: 1.0)
+
     def test_finalize_rejects_bad_probe(self):
         for bad in (0.0, -1.0, float("nan"), float("inf")):
             deck = make_deck(2)

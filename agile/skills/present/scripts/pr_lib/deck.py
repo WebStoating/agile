@@ -148,6 +148,11 @@ def prepare(deck: dict, public_dir: Path, root: Path) -> List[dict]:
 
 def finalize(deck: dict, public_dir: Path, probe: Callable[[Path], float] = probe_duration) -> dict:
     public_dir = Path(public_dir)
+    voice = deck["voice"]
+    for i, s in enumerate(deck["slides"]):
+        key = cache_key(voice["voice_id"], voice["model_id"], s["narration"])
+        if s.get("audio") != f"audio/{key}.mp3":
+            raise DeckError(f"narration changed on slide {i}; run prepare")
     absent = [i for i, s in enumerate(deck["slides"])
               if not s.get("audio") or not (public_dir / s["audio"]).is_file()]
     if absent:
