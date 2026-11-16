@@ -41,3 +41,10 @@ def lookup(name: str, env: Mapping[str, str], dotenv: Optional[Path]) -> Optiona
     except (OSError, UnicodeDecodeError):
         return None
     return parse_dotenv(text).get(name) or None
+
+
+def source(name: str, env: Mapping[str, str], dotenv: Optional[Path]) -> Optional[str]:
+    """Where `lookup` would find a non-empty value: "env", ".env" or None."""
+    if env.get(name):
+        return "env"
+    return ".env" if lookup(name, {}, dotenv) else None

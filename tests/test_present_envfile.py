@@ -3,7 +3,7 @@ import unittest
 from pathlib import Path
 
 from tests import _path  # noqa: F401
-from pr_lib.envfile import lookup, parse_dotenv
+from pr_lib.envfile import lookup, parse_dotenv, source
 
 
 class EnvFileTests(unittest.TestCase):
@@ -26,6 +26,15 @@ class EnvFileTests(unittest.TestCase):
             self.assertIsNone(lookup("EMPTY", {}, f))
             self.assertIsNone(lookup("K", {}, Path(d) / "missing"))
             self.assertIsNone(lookup("K", {}, None))
+
+    def test_source(self):
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / ".env"
+            f.write_text("K=v\nEMPTY=\n", encoding="utf-8")
+            self.assertEqual(source("K", {"K": "e"}, f), "env")
+            self.assertEqual(source("K", {"K": ""}, f), ".env")
+            self.assertIsNone(source("EMPTY", {}, f))
+            self.assertIsNone(source("K", {}, None))
 
 
 if __name__ == "__main__":
