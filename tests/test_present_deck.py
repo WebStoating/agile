@@ -67,6 +67,33 @@ class DeckTests(unittest.TestCase):
         self.assertEqual((self.public / "logo.png").read_bytes(), b"png")
         self.assertEqual(deck["theme"]["logo"], "logo.png")
 
+    def test_prepare_dedupes_identical_narration(self):
+        deck = make_deck(3, narration="Same")
+        missing = dk.prepare(deck, self.public, self.tmp)
+        self.assertEqual([m["index"] for m in missing], [0])
+
+    def test_cli_prepare_twice_with_logo_and_duplicates(self):
+        (self.tmp / "brand").mkdir()
+        (self.tmp / "brand" / "logo.png").write_bytes(b"png")
+        deck = make_deck(2, narration="Same")
+        deck["theme"]["logo"] = "brand/logo.png"
+        f = self.tmp / "deck.json"
+        f.write_text(json.dumps(deck), encoding="utf-8")
+        cmd = [sys.executable, "-I", str(CLI), "prepare", "--deck", str(f),
+               "--public-dir", str(self.public), "--root", str(self.tmp)]
+        first = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8")
+        second = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8")
+        self.assertEqual(second.returncode, 0, second.stderr)
+        self.assertEqual(json.loads(first.stdout), json.loads(second.stdout))
+        out = json.loads(second.stdout)
+        self.assertEqual((len(out["missing"]), out["cached"]), (1, 0))
+        self.assertEqual(json.loads(f.read_text(encoding="utf-8"))["theme"]["logo"], "logo.png")
+        key = dk.cache_key("v1", "m1", "Same")
+        (self.public / "audio").mkdir(parents=True, exist_ok=True)
+        (self.public / "audio" / f"{key}.mp3").write_bytes(b"x")
+        third = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8")
+        self.assertEqual(json.loads(third.stdout), {"missing": [], "cached": 1})
+
     def test_logo_errors(self):
         for logo in ("nope.png", "../x.png", str(self.tmp / "abs.png")):
             deck = make_deck(1)

@@ -41,7 +41,8 @@ def main(argv=None) -> int:
         if args.cmd == "prepare":
             missing = dk.prepare(deck, public, Path(args.root))
             _write(path, deck)
-            out = {"missing": missing, "cached": len(deck["slides"]) - len(missing)}
+            present = {s["audio"] for s in deck["slides"] if (public / s["audio"]).is_file()}
+            out = {"missing": missing, "cached": len(present)}
         else:
             dk.finalize(deck, public)
             _write(path, deck)

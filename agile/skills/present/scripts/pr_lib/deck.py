@@ -68,6 +68,9 @@ def _copy_logo(deck: dict, public_dir: Path, root: Path) -> None:
     if rel.is_absolute() or ".." in rel.parts:
         raise DeckError(f"theme.logo must be relative to the notes root: {logo}")
     src = Path(root) / rel
+    if (not src.is_file() and rel.parent == Path(".") and rel.stem == "logo"
+            and (public_dir / logo).is_file()):
+        return  # already prepared: theme.logo names the copy in public/
     if not src.is_file():
         raise DeckError(f"theme.logo not found: {src}")
     dest_name = "logo" + src.suffix.lower()
@@ -81,12 +84,14 @@ def prepare(deck: dict, public_dir: Path, root: Path) -> List[dict]:
     voice = deck["voice"]
     _copy_logo(deck, public_dir, Path(root))
     missing = []
+    seen = set()
     for i, s in enumerate(deck["slides"]):
         key = cache_key(voice["voice_id"], voice["model_id"], s["narration"])
         s["audio"] = f"audio/{key}.mp3"
         s.pop("durationInSeconds", None)
         mp3 = public_dir / "audio" / f"{key}.mp3"
-        if not mp3.is_file():
+        if not mp3.is_file() and key not in seen:
+            seen.add(key)
             missing.append({"index": i, "path": str(mp3.resolve()), "text": s["narration"]})
     return missing
 
