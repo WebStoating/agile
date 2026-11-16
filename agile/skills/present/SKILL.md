@@ -117,7 +117,9 @@ It copies the template into `remotion_dir` on the first run and refreshes it whe
 keeping `node_modules/`. It prints JSON with `action` (`created`, `updated`, `current`) and `needs_install`.
 
 - On the first setup (`action` is `created`) in a git repository, offer to add `.present/` to
-  `<root>/.gitignore`. On a yes, run the command again with `--gitignore`.
+  `<root>/.gitignore`. On a yes, run the command again with `--gitignore`. If it then prints
+  `"gitignore_added": false`, tell the user nothing was added: `<root>` is not inside a git work tree, or
+  `.present/` is already listed.
 - If `needs_install` is true, ask, then run `npm install` in `remotion_dir`. Never install in the skill's
   own folder.
 - If `action` is `created` or `updated`, check that the composition renders before going on: in

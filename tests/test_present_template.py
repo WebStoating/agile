@@ -90,8 +90,19 @@ class ProjectTests(unittest.TestCase):
         (rd / "present-template.json").write_text('{"templateVersion": "0"}', encoding="utf-8")
         self.assertEqual(pj.ensure_project(rd), {"action": "updated", "needs_install": True})
 
+    def test_add_gitignore_nested_in_repo(self):
+        notes = self.tmp / "team" / "notes"
+        notes.mkdir(parents=True)
+        self.assertFalse(pj.add_gitignore(notes, stop=self.tmp))
+        self.assertFalse((notes / ".gitignore").exists())
+        (self.tmp / ".git").write_text("gitdir: elsewhere", encoding="utf-8")  # a worktree's .git file
+        self.assertTrue(pj.add_gitignore(notes, stop=self.tmp))
+        self.assertFalse(pj.add_gitignore(notes, stop=self.tmp))
+        self.assertEqual((notes / ".gitignore").read_text(encoding="utf-8"), ".present/\n")
+        self.assertFalse((self.tmp / ".gitignore").exists())
+
     def test_add_gitignore(self):
-        self.assertFalse(pj.add_gitignore(self.tmp))
+        self.assertFalse(pj.add_gitignore(self.tmp, stop=self.tmp))
         self.assertFalse((self.tmp / ".gitignore").exists())
         (self.tmp / ".git").mkdir()
         (self.tmp / ".gitignore").write_text("node_modules/", encoding="utf-8")

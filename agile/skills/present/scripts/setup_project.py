@@ -23,7 +23,7 @@ def main(argv=None) -> int:
     safe_stdout()
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--root", required=True)
-    p.add_argument("--gitignore", action="store_true", help="add .present/ to <root>/.gitignore in a git checkout")
+    p.add_argument("--gitignore", action="store_true", help="add .present/ to <root>/.gitignore when <root> is inside a git work tree")
     args = p.parse_args(argv)
     root = Path(args.root).resolve()
     remotion_dir = root / ".present" / "remotion"

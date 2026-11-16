@@ -2,6 +2,7 @@
 import json
 import shutil
 from pathlib import Path
+from typing import Optional
 
 TEMPLATE_DIR = Path(__file__).resolve().parent.parent.parent / "assets" / "remotion-template"
 VERSION_FILE = "present-template.json"
@@ -46,10 +47,25 @@ def ensure_project(remotion_dir: Path) -> dict:
     return {"action": "updated", "needs_install": not has_modules or changed}
 
 
-def add_gitignore(root: Path) -> bool:
-    """Append `.present/` to root/.gitignore when root is a git checkout; True if the file changed."""
+def in_git_work_tree(root: Path, stop: Optional[Path] = None) -> bool:
+    """True if root or a parent (up to and including stop) holds a `.git` folder or file."""
+    root = Path(root).resolve()
+    stop = Path(stop).resolve() if stop is not None else None
+    for folder in (root, *root.parents):
+        if (folder / ".git").exists():
+            return True
+        if folder == stop:
+            break
+    return False
+
+
+def add_gitignore(root: Path, stop: Optional[Path] = None) -> bool:
+    """Append `.present/` to root/.gitignore when root is inside a git work tree; True if the file changed.
+
+    `stop` limits the search for `.git` to root and its parents up to that folder (for tests).
+    """
     root = Path(root)
-    if not (root / ".git").exists():
+    if not in_git_work_tree(root, stop):
         return False
     path = root / ".gitignore"
     text = path.read_text(encoding="utf-8") if path.is_file() else ""
