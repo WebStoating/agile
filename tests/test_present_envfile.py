@@ -12,6 +12,11 @@ class EnvFileTests(unittest.TestCase):
         self.assertEqual(parse_dotenv(text),
                          {"A": "1", "B": "two words", "C": "x#y", "D": "val", "E": ""})
 
+    def test_quoted_value_with_trailing_comment(self):
+        text = "B=\"x y\" # c\nC='z' # c\nD=\"a#b\"\nE=\"unterminated\n"
+        self.assertEqual(parse_dotenv(text),
+                         {"B": "x y", "C": "z", "D": "a#b", "E": "\"unterminated"})
+
     def test_lookup_order(self):
         with tempfile.TemporaryDirectory() as d:
             f = Path(d) / ".env"

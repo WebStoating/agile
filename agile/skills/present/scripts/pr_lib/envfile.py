@@ -18,8 +18,9 @@ def parse_dotenv(text: str) -> Dict[str, str]:
         value = value.strip()
         if not key:
             continue
-        if len(value) >= 2 and value[0] in "\"'" and value[-1] == value[0]:
-            value = value[1:-1]
+        close = value.find(value[0], 1) if value[:1] in ("\"", "'") else -1
+        if close != -1 and (not value[close + 1:].strip() or value[close + 1:].lstrip().startswith("#")):
+            value = value[1:close]
         else:
             cut = value.find(" #")
             if cut != -1:
