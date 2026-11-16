@@ -129,7 +129,10 @@ def prepare(deck: dict, public_dir: Path, root: Path) -> List[dict]:
     public_dir = Path(public_dir)
     voice = deck["voice"]
     _copy_logo(deck, public_dir, Path(root))
-    (public_dir / "audio").mkdir(parents=True, exist_ok=True)  # the ElevenLabs CLI writes here
+    audio_dir = public_dir / "audio"
+    audio_dir.mkdir(parents=True, exist_ok=True)  # the ElevenLabs CLI writes here
+    for part in audio_dir.glob("*.part"):  # left by an interrupted text-to-speech call
+        part.unlink()
     missing = []
     seen = set()
     for i, s in enumerate(deck["slides"]):

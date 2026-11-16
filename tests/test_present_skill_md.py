@@ -57,6 +57,10 @@ class PresentSkillMdTests(unittest.TestCase):
                   "PRESENTATION"):
             self.assertIn(s, text)
 
+    def test_tts_writes_part_file_then_renames(self):
+        text = SKILL.read_text(encoding="utf-8")
+        self.assertIn('--output "<path>.part"', text)
+
     def test_env_path_is_quoted(self):
         text = SKILL.read_text(encoding="utf-8")
         self.assertIn('. "<root>/.env"', text)

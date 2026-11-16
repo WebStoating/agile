@@ -64,6 +64,15 @@ class DeckTests(unittest.TestCase):
         self.assertTrue((self.public / "audio").is_dir())
         dk.prepare(make_deck(1), self.public, self.tmp)  # exists already: no error
 
+    def test_prepare_removes_stale_part_files(self):
+        audio = self.public / "audio"
+        audio.mkdir(parents=True)
+        (audio / "abc.mp3.part").write_bytes(b"half")
+        (audio / "keep.mp3").write_bytes(b"x")
+        dk.prepare(make_deck(1), self.public, self.tmp)
+        self.assertFalse((audio / "abc.mp3.part").exists())
+        self.assertTrue((audio / "keep.mp3").exists())
+
     def test_prepare_copies_logo(self):
         (self.tmp / "brand").mkdir()
         (self.tmp / "brand" / "logo.png").write_bytes(b"png")

@@ -161,11 +161,12 @@ It sets each slide's `audio` to a cache path named by voice, model and narration
 For **each** entry in `missing`, and only those, run (with `ELEVENLABS_API_KEY` in the environment):
 
 ```bash
-npx -y @elevenlabs/cli@1.11.0 text-to-speech convert --voice-id "<voice_id>" --model-id "<model_id>" --text '<text>' --output "<path>"
+npx -y @elevenlabs/cli@1.11.0 text-to-speech convert --voice-id "<voice_id>" --model-id "<model_id>" --text '<text>' --output "<path>.part"
 ```
 
-If a call fails, delete its `<path>` if a file was left there (a partial or error file would otherwise
-count as cached audio on the next `prepare`), then retry once; if it fails again, show the error and stop.
+Only when the command succeeds, rename `<path>.part` to `<path>`. The cache counts any file at `<path>` as
+voiced, so a failed or interrupted call must never leave one there. If a call fails, delete `<path>.part`,
+then retry once; if it fails again, show the error and stop. `prepare` also deletes stale `.part` files.
 
 Pass `<text>` as one single argument, exactly as given in `missing`. Never build the command by pasting the
 narration into a shell string where quotes, `$` or backticks could be interpreted: quote it so the shell
