@@ -17,6 +17,9 @@ class EnvFileTests(unittest.TestCase):
         self.assertEqual(parse_dotenv(text),
                          {"B": "x y", "C": "z", "D": "a#b", "E": "\"unterminated"})
 
+    def test_embedded_quote_keeps_outer_stripping(self):
+        self.assertEqual(parse_dotenv('K="pa"ss"\n'), {"K": 'pa"ss'})
+
     def test_lookup_order(self):
         with tempfile.TemporaryDirectory() as d:
             f = Path(d) / ".env"
