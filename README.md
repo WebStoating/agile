@@ -4,7 +4,7 @@ A Claude Code and Codex plugin of Agile project-management [Agent Skills](https:
 
 | Skill | What it does |
 |---|---|
-| `video-to-spec` | Turns a narrated presentation video that describes a feature into `SPECIFICATION.md`, a requirements document you can hand to a coding agent to implement. |
+| `video-to-spec` | Turns a narrated presentation video that describes a feature into `SPECIFICATION.md`, a specification-style document built only from the video, which you feed to a coding agent (Claude, Codex) as the source for brainstorming the feature. |
 
 ## video-to-spec
 
@@ -15,10 +15,11 @@ You record (or receive) a narrated slide presentation of a feature. The skill:
 3. Extracts one complete frame per slide: scene detection, frame taken just before each slide change so
    build-up animations are finished; one frame every few seconds for screen recordings.
 4. Has the agent look at every frame, re-take incomplete ones and build a slide table.
-5. Writes `SPECIFICATION.md`: instructions for the implementing agent, scope, functional requirements in
-   slide order with `[slide N, mm:ss–mm:ss]` citations, data and execution needs, safety constraints from your
-   project context, a suggested data model, acceptance criteria, tests and open questions. Everything the
-   agent added itself is marked *(added)*.
+5. Writes `SPECIFICATION.md` from the video content only: how the receiving agent should use it, the goal,
+   your project context, what the video describes in slide order with `[slide N, mm:ss–mm:ss]` citations,
+   scope and acceptance criteria when the video gives them, and open questions. No requirement IDs, no
+   invented tests or data models, no sections the video does not cover. Feed it to Claude or Codex to
+   brainstorm the design.
 
 Output goes to `./<video-name>-spec/`: `SPECIFICATION.md`, `transcript.txt`, `transcript.json`,
 `slides.json` and `frames/`.

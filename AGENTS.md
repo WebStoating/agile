@@ -8,8 +8,9 @@ The source for `agile`, a Claude Code and Codex plugin of Agile project-manageme
 [Agent Skills](https://agentskills.io/specification). Every skill must work in Claude Code and in Codex.
 
 Skills:
-- `video-to-spec` — turns a narrated presentation video into `SPECIFICATION.md`, a requirements document a
-  coding agent can implement from. Uses ffmpeg and the openai-whisper CLI.
+- `video-to-spec` — turns a narrated presentation video into `SPECIFICATION.md`, a specification-style
+  document built only from the video, used as the source for brainstorming with a coding agent. Uses
+  ffmpeg and the openai-whisper CLI.
 
 ## Layout
 

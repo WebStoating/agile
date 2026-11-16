@@ -7,19 +7,15 @@ SKILL = ROOT / "SKILL.md"
 TEMPLATE = ROOT / "assets" / "specification-template.md"
 SPEC_RULES = ROOT / "references" / "spec-writing.md"
 SECTIONS = [
-    "## 1. Instructions for the implementing agent",
-    "## 2. Background and goal",
-    "## 3. Scope",
-    "## 4. Workflow and functional requirements",
-    "## 5. Data, results and reporting",
-    "## 6. Execution",
-    "## 7. Safety and isolation",
-    "## 8. Suggested data model",
-    "## 9. Acceptance criteria",
-    "## 10. Tests",
-    "## 11. Open questions",
-    "## 12. Appendix: slides and transcript",
+    "## How to use this document",
+    "## Goal",
+    "## Project context",
+    "## What the video describes",
+    "## Scope",
+    "## Acceptance criteria",
+    "## Open questions",
 ]
+NOT_IN_SPEC = ("## Tests", "data model", "Appendix", "FR-", "AC-", "(added)", "Not covered in the video")
 AGENT_SPECIFIC = ("Read tool", "Bash tool", "view_image", "TodoWrite", "Claude Code's", "1568")
 
 
@@ -82,10 +78,13 @@ class SkillMdTests(unittest.TestCase):
         positions = [text.find(h) for h in SECTIONS]
         self.assertNotIn(-1, positions, dict(zip(SECTIONS, positions)))
         self.assertEqual(positions, sorted(positions))
+        for term in NOT_IN_SPEC:
+            self.assertNotIn(term, text, "the document holds only video content, without IDs or invented sections")
 
     def test_spec_rules_present(self):
         text = SPEC_RULES.read_text()
-        for phrase in ("*(added)*", "Not covered in the video", "placeholder", "Do not invent"):
+        for phrase in ("only the video", "No IDs", "placeholder", "Do not invent", "brainstorming",
+                       "not** a requirements document", "No appendix"):
             self.assertIn(phrase, text)
 
 

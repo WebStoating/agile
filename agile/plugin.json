@@ -1,7 +1,7 @@
 {
   "name": "agile",
   "version": "0.1.0",
-  "description": "Agile project-management skills for Claude Code and Codex. video-to-spec turns a narrated presentation video into SPECIFICATION.md for a coding agent: checks ffmpeg and openai-whisper, transcribes the narration, extracts one frame per slide and writes traceable requirements, acceptance criteria and open questions.",
+  "description": "Agile project-management skills for Claude Code and Codex. video-to-spec turns a narrated presentation video into SPECIFICATION.md, the source for brainstorming a feature with a coding agent: checks ffmpeg and openai-whisper, transcribes the narration, extracts one frame per slide and writes only what the video says, with citations, acceptance criteria when the video gives them, and open questions.",
   "author": {
     "name": "WebStoating",
     "url": "https://github.com/WebStoating"
@@ -11,7 +11,7 @@
   "license": "Apache-2.0",
   "keywords": [
     "agile",
-    "requirements",
+    "brainstorming",
     "specification",
     "video",
     "transcription",

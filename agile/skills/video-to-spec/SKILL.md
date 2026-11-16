@@ -1,6 +1,6 @@
 ---
 name: video-to-spec
-description: "Use when the user has a narrated presentation video (slide-deck walkthrough, feature demo, or screen recording with voice-over) that describes a feature to build and wants a written specification or requirements document a coding agent can implement from. Checks that ffmpeg and openai-whisper are installed, transcribes the narration to English with Whisper, extracts one complete frame per slide with ffmpeg scene detection, and writes SPECIFICATION.md: scope, functional requirements traced to slides and timestamps, data model suggestion, acceptance criteria, tests and open questions, with the video's requirements kept separate from additions."
+description: "Use when the user has a narrated presentation video (slide-deck walkthrough, feature demo, or screen recording with voice-over) that describes a feature idea and wants a written specification-style document to feed to a coding agent such as Claude or Codex as the source for brainstorming the feature. Checks that ffmpeg and openai-whisper are installed, transcribes the narration to English with Whisper, extracts one complete frame per slide with ffmpeg scene detection, and writes SPECIFICATION.md from the video content only: goal, what the video describes in slide order with slide and timestamp citations, scope and acceptance criteria when the video gives them, and open questions. It adds nothing the video does not say: no requirement IDs, tests, data models or appendix."
 license: Apache-2.0
 compatibility: Python 3.9+ (standard library only). Requires ffmpeg 5.1+ with ffprobe and the openai-whisper CLI (turbo model; medium for non-English narration). Works in Claude Code and Codex.
 metadata:
@@ -10,12 +10,14 @@ metadata:
 
 # Video to Spec
 
-Turn a narrated presentation video that describes a feature into `SPECIFICATION.md`, a requirements
-document the user can hand to a coding agent to implement.
+Turn a narrated presentation video that describes a feature into `SPECIFICATION.md`, a specification-style
+document the user feeds to a coding agent (Claude, Codex, …) as the source for a **brainstorming** session.
+The receiving agent then explores the codebase, asks the open questions and designs the feature with the
+user.
 
-**Core principle:** the video is the source of truth. Everything in the specification is traceable to a
-slide or a moment in the narration, or is clearly marked as your addition. Never invent names, numbers or
-behaviour and present them as requirements.
+**Core principle:** the document contains only what the video says, plus the project context the user gave.
+Every statement is traceable to a slide or a moment in the narration. Never invent names, numbers,
+behaviour, tests, data models or sections the video does not cover, and never use requirement IDs.
 
 ## Inputs and paths
 
@@ -39,8 +41,8 @@ python3 -I <skill-dir>/scripts/check_tools.py
 - **Exit 0:** if a `MODEL` line says a model is not downloaded yet, tell the user in one line that the first
   transcription downloads it (size is in the line), then continue.
 - Confirm `<video>` exists.
-- If the user has not given project context, ask for it once. If they decline, write "Project context: not
-  provided" in the Scope section and keep going.
+- If the user has not given project context, ask for it once. If they decline, leave the Project context
+  section out and keep going.
 
 ## Step 1 — Transcribe
 
@@ -83,28 +85,30 @@ Open **every** image in `<out>/frames/` and look at it.
   `<out>/slides.json`.
 - Show the user a table: file, time range, slide title.
 
-## Step 4 — Write the specification
+## Step 4 — Write SPECIFICATION.md
 
 Write `<out>/SPECIFICATION.md` from [assets/specification-template.md](assets/specification-template.md),
 following every rule in [references/spec-writing.md](references/spec-writing.md). Use the transcript and
-the slide images together: match transcript segments to slides by time range, so each requirement cites
+the slide images together: match transcript segments to slides by time range, so each statement cites
 where it came from. Look at the frames again whenever a slide carries numbers, tables, fields or diagrams.
 
 ## Step 5 — Report to the user
 
 In chat, give:
 1. The path of every file: `SPECIFICATION.md`, `transcript.txt`, `transcript.json`, `slides.json`, `frames/`.
-2. Which parts you added yourself (everything marked *(added)*), in a short list.
-3. The open questions the user should answer before handing the specification to a coding agent, most
-   important first.
+2. The top open questions the brainstorming session will need to settle, most important first.
+3. How to use it: paste or attach `SPECIFICATION.md` (and the frames, if the agent can read images) to a
+   coding agent and ask it to explore the codebase, then go through the open questions one at a time.
 
 ## Red flags — stop and correct course
 
 | Thought | Reality |
 |---|---|
-| "The tool check failed, but I can probably manage without whisper" | Stop and show the install hints. The spec depends on the narration. |
-| "The slide shows a number, so that's the requirement" | Check the narration: is it an example or placeholder? Label it as such if so. |
-| "I know what this model or service is probably called in their codebase" | Do not invent names. Section 1 tells the implementing agent to find them. |
-| "Section 6 or 7 is empty, I'll fill it with sensible defaults" | Write "Not covered in the video" and move the point to Open questions. |
+| "The tool check failed, but I can probably manage without whisper" | Stop and show the install hints. The document depends on the narration. |
+| "The slide shows a number, so that's decided" | Check the narration: is it an example or placeholder? Label it as such if so. |
+| "I know what this model or service is probably called in their codebase" | Do not invent names. The receiving agent finds them in the codebase. |
+| "This would be clearer as FR-1 … / AC-1 … / Q1 …" | No IDs. Use plain bullets. |
+| "A tests section / data model / appendix would help" | Only if the video covers it. Otherwise leave it out entirely. |
+| "The video doesn't cover this, I'll fill it with a sensible default" | Leave it out. If the video raises the point but leaves it unclear, make it an open question. |
 | "The frame looks roughly right, no need to open the others" | Open every frame. Partial build-up frames are the most common defect. |
 | "I'll tidy the speaker's wording" | Keep exact numbers, examples and wording; clarity edits go in your own sentences. |
