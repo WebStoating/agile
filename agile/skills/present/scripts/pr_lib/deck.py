@@ -83,6 +83,7 @@ def prepare(deck: dict, public_dir: Path, root: Path) -> List[dict]:
     public_dir = Path(public_dir)
     voice = deck["voice"]
     _copy_logo(deck, public_dir, Path(root))
+    (public_dir / "audio").mkdir(parents=True, exist_ok=True)  # the ElevenLabs CLI writes here
     missing = []
     seen = set()
     for i, s in enumerate(deck["slides"]):

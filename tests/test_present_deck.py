@@ -58,6 +58,12 @@ class DeckTests(unittest.TestCase):
         again = dk.prepare(deck, self.public, self.tmp)
         self.assertEqual([m["path"] for m in again], [m["path"] for m in missing])
 
+    def test_prepare_creates_audio_folder(self):
+        self.assertFalse(self.public.exists())
+        dk.prepare(make_deck(1), self.public, self.tmp)
+        self.assertTrue((self.public / "audio").is_dir())
+        dk.prepare(make_deck(1), self.public, self.tmp)  # exists already: no error
+
     def test_prepare_copies_logo(self):
         (self.tmp / "brand").mkdir()
         (self.tmp / "brand" / "logo.png").write_bytes(b"png")
