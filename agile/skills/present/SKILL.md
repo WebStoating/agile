@@ -30,7 +30,8 @@ invent progress, names, numbers, blockers, IDs or filler sections. Rules:
   [references/settings.md](references/settings.md).
 
 Run every script as `python3 -I <skill-dir>/scripts/<script>.py`. They use only the Python standard library,
-never touch the network, and never print key values.
+never touch the network, and never print key values. Quote every path argument in every command, as shown:
+notes folders often contain spaces.
 
 **Keys.** Never print, echo or store the value of `ELEVENLABS_API_KEY` or `REMOTION_LICENSE_KEY`, and never
 put one on a command line as literal text. Report only present or absent. When a key lives in `<root>/.env`
@@ -42,15 +43,17 @@ showing it (in a POSIX shell: `set -a; . <root>/.env; set +a; <command>`).
 1. Run Step 1's `settings.py resolve` command to learn `<root>`, then:
 
    ```bash
-   python3 -I <skill-dir>/scripts/check_tools.py --root <root>
+   python3 -I "<skill-dir>/scripts/check_tools.py" --root "<root>"
    ```
 
    - **Exit 1:** show the user the `MISSING` / `PROBLEM` lines with their hints and **stop**. For a missing
-     `ELEVENLABS_API_KEY`, point to the ElevenLabs `setup-api-key` skill. Do not work around a missing tool.
+     `ELEVENLABS_API_KEY`, point to the ElevenLabs `setup-api-key` skill, which sets the key up without
+     showing it. Do not work around a missing tool.
    - **Exit 0:** mention the `LICENSE` line once (Remotion needs a paid company license for organisations
      of more than 3 people), then continue.
-2. Check that you have the agent skills `remotion-best-practices`, `remotion-render` and `text-to-speech`.
-   If any is missing, show the install commands and install only on the user's go-ahead:
+2. Check that you have the agent skills `remotion-best-practices`, `remotion-render`, `text-to-speech` and
+   `setup-api-key`. If any is missing, show the install commands and install only on the user's go-ahead.
+   If the user declines, **stop**:
 
    ```bash
    npx skills add remotion-dev/skills
@@ -63,8 +66,8 @@ showing it (in a POSIX shell: `set -a; . <root>/.env; set +a; <command>`).
 ## Step 1: Resolve the input and the preset
 
 ```bash
-python3 -I <skill-dir>/scripts/settings.py resolve --input <file> [--preset <name>] [--output <format>]
-python3 -I <skill-dir>/scripts/settings.py resolve --pasted [--preset <name>] [--output <format>]
+python3 -I "<skill-dir>/scripts/settings.py" resolve --input "<file>" [--preset "<name>"] [--output "<format>"]
+python3 -I "<skill-dir>/scripts/settings.py" resolve --pasted [--preset "<name>"] [--output "<format>"]
 ```
 
 Read the input file (or take the pasted text). The command prints JSON with `root`, `status`, `preset`,
@@ -92,7 +95,7 @@ output format says otherwise. Handle `status`:
      a yes, write the preset as JSON to a scratch file and run:
 
      ```bash
-     python3 -I <skill-dir>/scripts/settings.py save --root <root> --preset <name> --json-file <file> [--default]
+     python3 -I "<skill-dir>/scripts/settings.py" save --root "<root>" --preset "<name>" --json-file "<file>" [--default]
      ```
 
      Then run `resolve` again. If the user declines, use the values for this run only.
@@ -107,7 +110,7 @@ Then:
 ## Step 2: Set up the Remotion project
 
 ```bash
-python3 -I <skill-dir>/scripts/setup_project.py --root <root> [--gitignore]
+python3 -I "<skill-dir>/scripts/setup_project.py" --root "<root>" [--gitignore]
 ```
 
 It copies the template into `remotion_dir` on the first run and refreshes it when the template changes,
@@ -117,6 +120,16 @@ keeping `node_modules/`. It prints JSON with `action` (`created`, `updated`, `cu
   `<root>/.gitignore`. On a yes, run the command again with `--gitignore`.
 - If `needs_install` is true, ask, then run `npm install` in `remotion_dir`. Never install in the skill's
   own folder.
+- If `action` is `created` or `updated`, check that the composition renders before going on: in
+  `remotion_dir`, render one second of `Deck` with its default props to a scratch file (license as in
+  Step 5):
+
+  ```bash
+  npx remotion render Deck "<scratch>/preview.mp4" --frames=0-29 --license-key=<license> --is-production=false
+  ```
+
+  If it fails, use the `remotion-best-practices` skill to find the cause (often an incomplete
+  `npm install`) and fix it before writing the deck. Never fix it by editing the template.
 
 How the template works and how to preview it: [references/remotion-template.md](references/remotion-template.md).
 
@@ -136,7 +149,7 @@ Show the user a table of slide number, type, title and narration, then continue 
 ## Step 4: Voice the narration
 
 ```bash
-python3 -I <skill-dir>/scripts/deck.py prepare --deck <run_dir>/deck.json --public-dir <public_dir> --root <root>
+python3 -I "<skill-dir>/scripts/deck.py" prepare --deck "<run_dir>/deck.json" --public-dir "<public_dir>" --root "<root>"
 ```
 
 It sets each slide's `audio` to a cache path named by voice, model and narration, copies the logo into
@@ -146,15 +159,18 @@ It sets each slide's `audio` to a cache path named by voice, model and narration
 For **each** entry in `missing`, and only those, run (with `ELEVENLABS_API_KEY` in the environment):
 
 ```bash
-npx -y @elevenlabs/cli@1.11.0 text-to-speech convert --voice-id <voice_id> --model-id <model_id> --text <text> --output <path>
+npx -y @elevenlabs/cli@1.11.0 text-to-speech convert --voice-id "<voice_id>" --model-id "<model_id>" --text '<text>' --output "<path>"
 ```
+
+If a call fails, delete its `<path>` if a file was left there (a partial or error file would otherwise
+count as cached audio on the next `prepare`), then retry once; if it fails again, show the error and stop.
 
 Pass `<text>` as one single argument, exactly as given in `missing`. Never build the command by pasting the
 narration into a shell string where quotes, `$` or backticks could be interpreted: quote it so the shell
 passes it unchanged (in a POSIX shell, single quotes, with each `'` written as `'\''`). Then:
 
 ```bash
-python3 -I <skill-dir>/scripts/deck.py finalize --deck <run_dir>/deck.json --public-dir <public_dir>
+python3 -I "<skill-dir>/scripts/deck.py" finalize --deck "<run_dir>/deck.json" --public-dir "<public_dir>"
 ```
 
 It measures every audio file, writes `durationInSeconds` into the deck and prints the slide count and the
@@ -165,12 +181,14 @@ total seconds. If it reports missing audio, voice those slides and run it again.
 In `remotion_dir`, run:
 
 ```bash
-npx remotion render Deck <output_path> --props=<run_dir>/deck.json --public-dir=<public_dir> --license-key=<license>
+npx remotion render Deck "<output_path>" --props="<run_dir>/deck.json" --public-dir="<public_dir>" --license-key=<license>
 ```
 
-- `<license>`: if `REMOTION_LICENSE_KEY` is set in the environment or in `<root>/.env` (the `LICENSE` line
-  from Step 0 says "key"), pass the variable, never its text: `--license-key="$REMOTION_LICENSE_KEY"`.
-  Otherwise pass `--license-key=free-license`.
+- `<license>`: if the `LICENSE` line from Step 0 says the key comes from `REMOTION_LICENSE_KEY`, pass the
+  variable, never its text: `--license-key="$REMOTION_LICENSE_KEY"`. When the key is only in
+  `<root>/.env`, load that file into this command's environment first (see **Keys** above), or the
+  variable expands to nothing. Otherwise pass `--license-key=free-license`. Never pass an empty
+  `--license-key=`.
 - Use absolute paths. This is the final, production render; any preview or test render adds
   `--is-production=false`.
 - If the render fails with a Chrome "Target closed" error, run it once more with `--concurrency=1`.
@@ -179,7 +197,7 @@ npx remotion render Deck <output_path> --props=<run_dir>/deck.json --public-dir=
 ## Step 6: Verify and report
 
 ```bash
-python3 -I <skill-dir>/scripts/verify.py --video <output_path> --deck <run_dir>/deck.json
+python3 -I "<skill-dir>/scripts/verify.py" --video "<output_path>" --deck "<run_dir>/deck.json"
 ```
 
 - `OK  <path>  <mm:ss>  <N> slides`: report to the user the video path, the duration, the slide count, how

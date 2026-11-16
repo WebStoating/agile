@@ -64,13 +64,17 @@ The theme comes from the preset as data, so presets never need code changes.
 Use the `remotion-studio` skill. Run the studio in `remotion_dir` with the current deck:
 
 ```bash
-npx remotion studio --props=<run_dir>/deck.json --public-dir=<public_dir>
+npx remotion studio --props="<run_dir>/deck.json" --public-dir="<public_dir>"
 ```
+
+After a fresh copy or a template refresh (`setup_project.py` reports `created` or `updated`), SKILL.md
+Step 2 renders one second of `Deck` with its default props (`src/defaultDeck.json`, no audio needed) to
+confirm the install works.
 
 A test render (a few seconds, or a quick check after a template change) is never a production render:
 
 ```bash
-npx remotion render Deck <scratch>/test.mp4 --props=<run_dir>/deck.json --public-dir=<public_dir> --license-key=free-license --is-production=false --frames=0-89
+npx remotion render Deck "<scratch>/test.mp4" --props="<run_dir>/deck.json" --public-dir="<public_dir>" --license-key=free-license --is-production=false --frames=0-89
 ```
 
 ## Changing the template
