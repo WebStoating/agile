@@ -15,8 +15,52 @@ class DeckError(Exception):
     """The deck is invalid or incomplete."""
 
 
+THEME_KEYS = ("primary", "background", "text", "font")
+MAX_BULLETS = 6
+
+
 def _is_int(v) -> bool:
     return isinstance(v, int) and not isinstance(v, bool)
+
+
+def _is_number(v) -> bool:
+    return isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(v)
+
+
+def _is_text(v) -> bool:
+    return isinstance(v, str) and bool(v.strip())
+
+
+def _check_slide(i: int, s: dict) -> None:
+    kind = s["type"]
+    if kind in ("title", "section", "bullets") and not _is_text(s.get("title")):
+        raise DeckError(f"slide {i}: {kind} slides need a non-empty string title")
+    if kind == "quote" and not isinstance(s.get("title", ""), str):
+        raise DeckError(f"slide {i}: title must be a string")
+    if not isinstance(s.get("subtitle", ""), str):
+        raise DeckError(f"slide {i}: subtitle must be a string")
+    if kind == "bullets":
+        bullets = s.get("bullets")
+        if (not isinstance(bullets, list) or not 1 <= len(bullets) <= MAX_BULLETS
+                or not all(isinstance(b, str) for b in bullets)):
+            raise DeckError(f"slide {i}: bullets must be a list of 1-{MAX_BULLETS} strings")
+    if kind == "quote" and not isinstance(s.get("quote"), str):
+        raise DeckError(f"slide {i}: quote slides need a string quote")
+    if "durationInSeconds" in s:
+        d = s["durationInSeconds"]
+        if not _is_number(d) or d <= 0:
+            raise DeckError(f"slide {i}: durationInSeconds must be a finite number > 0")
+
+
+def _check_theme(theme) -> None:
+    if not isinstance(theme, dict):
+        raise DeckError("theme is required")
+    for key in THEME_KEYS:
+        if not isinstance(theme.get(key), str):
+            raise DeckError(f"theme.{key} must be a string")
+    logo = theme.get("logo")
+    if logo is not None and not isinstance(logo, str):
+        raise DeckError("theme.logo must be a path string or null")
 
 
 def load_deck(path) -> dict:
@@ -30,14 +74,15 @@ def load_deck(path) -> dict:
         if not _is_int(deck.get(key)) or deck[key] <= 0:
             raise DeckError(f"{key} must be a positive integer")
     pause = deck.get("pauseSeconds")
-    if isinstance(pause, bool) or not isinstance(pause, (int, float)) or pause < 0:
-        raise DeckError("pauseSeconds must be a number >= 0")
+    if not _is_number(pause) or pause < 0:
+        raise DeckError("pauseSeconds must be a finite number >= 0")
     voice = deck.get("voice")
     if not isinstance(voice, dict):
         raise DeckError("voice is required")
     for key in ("voice_id", "model_id"):
         if not isinstance(voice.get(key), str) or not voice[key]:
             raise DeckError(f"voice.{key} is required")
+    _check_theme(deck.get("theme"))
     slides = deck.get("slides")
     if not isinstance(slides, list) or not slides:
         raise DeckError("slides must be a non-empty list")
@@ -49,6 +94,7 @@ def load_deck(path) -> dict:
         n = s.get("narration")
         if not isinstance(n, str) or not n.strip():
             raise DeckError(f"slide {i}: narration must be a non-empty string")
+        _check_slide(i, s)
     return deck
 
 
@@ -103,8 +149,11 @@ def finalize(deck: dict, public_dir: Path, probe: Callable[[Path], float] = prob
               if not s.get("audio") or not (public_dir / s["audio"]).is_file()]
     if absent:
         raise DeckError("missing audio for slides: " + ", ".join(str(i) for i in absent))
-    for s in deck["slides"]:
-        s["durationInSeconds"] = round(probe(public_dir / s["audio"]), 3)
+    for i, s in enumerate(deck["slides"]):
+        seconds = probe(public_dir / s["audio"])
+        if not _is_number(seconds) or seconds <= 0:
+            raise DeckError(f"slide {i}: audio {s['audio']} has no usable duration ({seconds})")
+        s["durationInSeconds"] = round(seconds, 3)
     return deck
 
 

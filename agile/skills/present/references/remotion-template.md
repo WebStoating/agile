@@ -31,8 +31,8 @@ the deck data, not the code, changes from run to run.
 | `fps`, `width`, `height` | Positive integers; the skill uses 30, 1920 and 1080 |
 | `pauseSeconds` | Silence after each slide's narration, a number ≥ 0; the skill uses 0.6 |
 | `voice` | `voice_id` and `model_id` from the preset (they are part of the audio cache key) |
-| `theme` | `primary`, `background`, `text`, `font`, `logo` (below) |
-| `slides` | A non-empty list. Each has `type` (`title`, `section`, `bullets`, `quote`), `narration`, and that type's fields |
+| `theme` | Required. `primary`, `background`, `text` and `font` are required strings; `logo` is a string or `null` (below) |
+| `slides` | A non-empty list. Each has `type` (`title`, `section`, `bullets`, `quote`), a non-empty `narration`, and that type's fields: `title`, `section` and `bullets` need a non-empty `title`; `bullets` needs 1 to 6 strings in `bullets`; `quote` needs a string `quote`; `subtitle` (title slides) and `title` (quote slides) are optional strings |
 
 The scripts fill in the rest:
 
@@ -40,7 +40,8 @@ The scripts fill in the rest:
   `theme.logo` with the name of the copy it put in `public/`.
 - `deck.py finalize` sets each slide's `durationInSeconds` from the audio file.
 
-The render fails on a slide without `durationInSeconds`, so always finalize before rendering.
+`deck.py prepare` and `finalize` reject a deck that breaks these rules, naming the field, before anything is
+rendered. The render fails on a slide without `durationInSeconds`, so always finalize before rendering.
 
 ## Timing
 

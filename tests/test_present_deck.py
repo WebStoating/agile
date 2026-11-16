@@ -155,6 +155,75 @@ class DeckTests(unittest.TestCase):
             with self.assertRaises(dk.DeckError, msg=str(i)):
                 dk.load_deck(f)
 
+    def _assert_invalid(self, cases):
+        for i, d in enumerate(cases):
+            f = self.tmp / f"bad{i}.json"
+            f.write_text(json.dumps(d), encoding="utf-8")
+            with self.assertRaises(dk.DeckError, msg=str(i)):
+                dk.load_deck(f)
+
+    def test_invalid_numbers(self):
+        cases = []
+        for key in ("fps", "width", "height"):
+            d = make_deck(1); d[key] = True; cases.append(d)
+        d = make_deck(1); d["pauseSeconds"] = True; cases.append(d)
+        for bad in ("NaN", "Infinity"):
+            f = self.tmp / f"{bad}.json"
+            f.write_text(json.dumps(make_deck(1)).replace('"pauseSeconds": 0.6',
+                                                          f'"pauseSeconds": {bad}'), encoding="utf-8")
+            with self.assertRaises(dk.DeckError, msg=bad):
+                dk.load_deck(f)
+        for bad in (True, -1, 0, "1", float("inf"), float("nan")):
+            d = make_deck(1); d["slides"][0]["durationInSeconds"] = bad; cases.append(d)
+        self._assert_invalid(cases)
+        d = make_deck(1); d["slides"][0]["durationInSeconds"] = 2.5
+        f = self.tmp / "ok.json"
+        f.write_text(json.dumps(d), encoding="utf-8")
+        dk.load_deck(f)
+
+    def test_invalid_slide_fields(self):
+        cases = []
+        for t in ("title", "section", "bullets"):
+            for bad in (None, "", "  ", 3):
+                d = make_deck(1); d["slides"][0].update(type=t, title=bad, bullets=["a"]); cases.append(d)
+        for bad in (None, [], ["a"] * 7, [1], ["ok", None], "a"):
+            d = make_deck(1); d["slides"][0]["bullets"] = bad; cases.append(d)
+        d = make_deck(1); del d["slides"][0]["bullets"]; cases.append(d)
+        for bad in (None, 3):
+            d = make_deck(1); d["slides"][0] = {"type": "quote", "quote": bad, "narration": "n"}; cases.append(d)
+        d = make_deck(1); d["slides"][0] = {"type": "quote", "quote": "q", "title": 3, "narration": "n"}
+        cases.append(d)
+        d = make_deck(1); d["slides"][0].update(type="title", subtitle=5); cases.append(d)
+        self._assert_invalid(cases)
+        ok = make_deck(1)
+        ok["slides"] = [{"type": "quote", "quote": "q", "narration": "n"},
+                        {"type": "bullets", "title": "t", "bullets": ["a"] * 6, "narration": "n"},
+                        {"type": "title", "title": "t", "subtitle": "s", "narration": "n"}]
+        f = self.tmp / "ok.json"
+        f.write_text(json.dumps(ok), encoding="utf-8")
+        dk.load_deck(f)
+
+    def test_invalid_theme(self):
+        cases = []
+        d = make_deck(1); del d["theme"]; cases.append(d)
+        d = make_deck(1); d["theme"] = "dark"; cases.append(d)
+        for key in ("primary", "background", "text", "font"):
+            d = make_deck(1); del d["theme"][key]; cases.append(d)
+            d = make_deck(1); d["theme"][key] = 1; cases.append(d)
+        d = make_deck(1); d["theme"]["logo"] = 7; cases.append(d)
+        self._assert_invalid(cases)
+
+    def test_finalize_rejects_bad_probe(self):
+        for bad in (0.0, -1.0, float("nan"), float("inf")):
+            deck = make_deck(2)
+            dk.prepare(deck, self.public, self.tmp)
+            for s in deck["slides"]:
+                (self.public / s["audio"]).write_bytes(b"x")
+            values = iter((1.0, bad))
+            with self.assertRaises(dk.DeckError, msg=str(bad)) as cm:
+                dk.finalize(deck, self.public, probe=lambda p: next(values))
+            self.assertIn("slide 1", str(cm.exception))
+
     def test_cli_non_ascii_console(self):
         f = self.tmp / "deck.json"
         f.write_text(json.dumps(make_deck(1, narration="Café — 完了 ✅"), ensure_ascii=False),

@@ -40,7 +40,8 @@ Preset fields:
   preset is created (default `eleven_v4`) and is never changed silently; a new model means new audio for
   every slide.
 - `theme`: `primary`, `background` and `text` as hex colors, `font` as a Google Fonts family name, and `logo`
-  as a path relative to `<root>` (or `null`). See [remotion-template.md](remotion-template.md).
+  as a path relative to `<root>` (or `null`). All four of `primary`, `background`, `text` and `font` are
+  required; a deck without them is rejected. See [remotion-template.md](remotion-template.md).
 - `output`: the output format (optional). See the placeholders below.
 
 API keys never go in this file. `ELEVENLABS_API_KEY` and `REMOTION_LICENSE_KEY` come from the environment
