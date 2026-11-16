@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "fps": 30,
+  "width": 1920,
+  "height": 1080,
+  "pauseSeconds": 0.6,
+  "voice": {"voice_id": "JBFqnCBsd6RMkjVDRZzb", "model_id": "eleven_v4"},
+  "theme": {"primary": "#2563EB", "background": "#0B1220", "text": "#F8FAFC", "font": "Inter", "logo": null},
+  "slides": [
+    {
+      "type": "title",
+      "title": "Daily Standup",
+      "subtitle": "Team update",
+      "narration": "Welcome to the daily standup. Here is the update from yesterday and what is planned today."
+    },
+    {
+      "type": "section",
+      "title": "Yesterday",
+      "narration": "First, what was done yesterday."
+    },
+    {
+      "type": "bullets",
+      "title": "Completed",
+      "bullets": ["Finished the login form", "Reviewed two pull requests", "Fixed the report export bug"],
+      "narration": "Yesterday was about closing things out. The login form and the report export fix are both done, and two pull requests got their review."
+    },
+    {
+      "type": "quote",
+      "title": "Blocker",
+      "quote": "Waiting on access to the staging environment.",
+      "narration": "One blocker: we are waiting on access to the staging environment."
+    }
+  ]
+}

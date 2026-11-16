@@ -28,7 +28,7 @@ class PluginPackageTests(unittest.TestCase):
         top = sorted(p.name for p in PLUGIN_DIR.iterdir() if p.name not in IGNORED)
         self.assertEqual(top, [".claude-plugin", "plugin.json", "skills"])
         self.assertEqual(sorted(p.name for p in SKILLS_DIR.iterdir() if p.name not in IGNORED),
-                         ["video-to-spec"])
+                         ["present", "video-to-spec"])
 
     def test_no_symlink_escapes_plugin(self):
         real_root = os.path.realpath(PLUGIN_DIR)

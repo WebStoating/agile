@@ -11,6 +11,10 @@ Skills:
 - `video-to-spec` — turns a narrated presentation video into `SPECIFICATION.md`, a specification-style
   document built only from the video, used as the source for brainstorming with a coding agent. Uses
   ffmpeg and the openai-whisper CLI.
+- `present` — turns a written update (a daily standup or weekly summary, as a Markdown file or pasted text)
+  into a narrated slide video (MP4): slides and narration from the input only, voiced with ElevenLabs and
+  rendered with a saved Remotion template. Presets live in `.present.json` at the notes root; working files in
+  `.present/`. Uses Node.js/npx, ffmpeg, the ElevenLabs CLI and Remotion.
 
 ## Layout
 
@@ -23,11 +27,17 @@ tests/                            # unittest suite
 agile/                            # THE PLUGIN — the only thing that ships
 ├── .claude-plugin/plugin.json    # Claude Code manifest
 ├── plugin.json                   # Codex manifest
-└── skills/video-to-spec/
-    ├── SKILL.md
-    ├── scripts/                  # check_tools.py, transcribe.py, extract_slides.py, vts_lib/
-    ├── references/
-    └── assets/
+└── skills/
+    ├── video-to-spec/
+    │   ├── SKILL.md
+    │   ├── scripts/              # check_tools.py, transcribe.py, extract_slides.py, vts_lib/
+    │   ├── references/
+    │   └── assets/
+    └── present/
+        ├── SKILL.md
+        ├── scripts/              # check_tools.py, settings.py, setup_project.py, deck.py, verify.py, pr_lib/
+        ├── references/
+        └── assets/               # deck.example.json, remotion-template/
 ```
 
 ## Commands
@@ -35,6 +45,7 @@ agile/                            # THE PLUGIN — the only thing that ships
 ```bash
 python3 -m unittest discover -s tests -t . -v                    # offline suite (ffmpeg tests skip without ffmpeg)
 uvx --from "git+https://github.com/agentskills/agentskills#subdirectory=skills-ref" skills-ref validate agile/skills/video-to-spec
+uvx --from "git+https://github.com/agentskills/agentskills#subdirectory=skills-ref" skills-ref validate agile/skills/present
 claude plugin validate --strict agile
 claude --plugin-dir agile                                        # load the plugin from the working tree
 ```
@@ -62,9 +73,11 @@ Never name one agent's tools or model-specific limits.
 **Skill scripts:** Python ≥3.9, standard library only, always run as `python3 -I`. Subprocess calls take an argv
 list (first element resolved with `shutil.which`), never `shell=True`. External tools: ffmpeg ≥5.1, ffprobe,
 openai-whisper CLI.
+`present` also uses Node.js 18+ with npx, `@elevenlabs/cli` (pinned to 1.11.0 in the `npx` call) and Remotion 4.0.544
+(pinned in the template's `package.json`).
 
 **Tests:** never run real whisper in the suite; use the stub executables from `tests/stubs.py`. Tests that need
-ffmpeg generate their videos at test time and skip when ffmpeg is absent. No media files are committed.
+ffmpeg generate their videos at test time and skip when ffmpeg is absent. No media files are committed. Tests never call node, npm, Remotion or ElevenLabs.
 
 ## Commits
 

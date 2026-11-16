@@ -1,0 +1,21 @@
+{
+  "name": "present-deck",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Remotion template that renders a present deck.json as a narrated slide video",
+  "scripts": {
+    "studio": "remotion studio",
+    "render": "remotion render Deck"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.544",
+    "@remotion/google-fonts": "4.0.544",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "remotion": "4.0.544"
+  },
+  "devDependencies": {
+    "@types/react": "19.3.0",
+    "typescript": "5.9.3"
+  }
+}

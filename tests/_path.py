@@ -11,6 +11,11 @@ ROOT = SKILLS_DIR / "video-to-spec"
 SCRIPTS = ROOT / "scripts"
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
+# The present skill directory and its scripts/.
+PRESENT_ROOT = SKILLS_DIR / "present"
+PRESENT_SCRIPTS = PRESENT_ROOT / "scripts"
+if str(PRESENT_SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(PRESENT_SCRIPTS))
 
 
 def skill_version(skill_dir: Path) -> str:
