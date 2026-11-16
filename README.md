@@ -40,8 +40,9 @@ Output goes to `./<video-name>-spec/`: `SPECIFICATION.md`, `transcript.txt`, `tr
 
 You write a daily standup or a weekly summary as a Markdown file (or paste the text). The skill:
 
-1. Checks the tools (Node.js with npx, ffmpeg, `ELEVENLABS_API_KEY`) and the Remotion and ElevenLabs agent
-   skills, and stops with install hints if something is missing.
+1. Checks the tools (Node.js with npx, ffmpeg, `ELEVENLABS_API_KEY`) and stops with install hints if one is
+   missing. If the Remotion or ElevenLabs agent skills are missing, it offers the install commands, installs
+   them only with your go-ahead, and stops if you decline.
 2. Resolves the preset: the context (who watches, what it covers, how long), the voice, the theme and the
    output format. On the first run it helps you pick a voice and a theme and saves them as a preset.
 3. Sets up a Remotion project from a saved template in `.present/`, so the look stays the same from run to run.
@@ -80,8 +81,8 @@ first setup.
 
 - Python 3.9+ (the scripts use only the standard library).
 - Node.js 18+ with npx — macOS `brew install node`, Debian/Ubuntu `sudo apt install nodejs npm`,
-  Windows `winget install OpenJS.NodeJS.LTS`. The first run runs `npm install` in `.present/` and downloads the
-  ElevenLabs CLI through npx.
+  Windows `winget install OpenJS.NodeJS.LTS`. The first run runs `npm install` in `.present/` (after asking) and
+  downloads the ElevenLabs CLI through npx.
 - ffmpeg with ffprobe — as for `video-to-spec`.
 - An ElevenLabs API key in `ELEVENLABS_API_KEY`, set in your shell or in a `.env` file at the notes root.
   Voicing uses ElevenLabs credits; slides whose narration did not change reuse cached audio and cost nothing.
