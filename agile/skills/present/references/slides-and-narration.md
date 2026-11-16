@@ -50,8 +50,8 @@ Every slide also has `narration`. The scripts add `audio` and `durationInSeconds
 - **Exact facts:** numbers and names as written. Write them so they read aloud naturally, without changing
   their value ("PR 412" stays "PR 412").
 - Title slide: one or two sentences that say what the update is. Section slides: one short sentence.
-- Plain text only: no Markdown, emoji, URLs or code in the narration. Name a link's subject instead of
-  reading its URL.
+- Plain text only: no Markdown, emoji, URLs, code or square brackets in the narration (`eleven_v4` reads
+  `[...]` as an audio tag, a stage direction, not as words). Name a link's subject instead of reading its URL.
 - Each slide's narration is voiced separately, so each one must make sense on its own and end with a full
   sentence.
 

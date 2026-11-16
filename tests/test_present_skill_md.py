@@ -68,7 +68,7 @@ class PresentSkillMdTests(unittest.TestCase):
 
     def test_slides_and_narration_rules(self):
         text = (REFERENCES / "slides-and-narration.md").read_text(encoding="utf-8")
-        for s in ("only what the input says", "150 words"):
+        for s in ("only what the input says", "150 words", "square brackets"):
             self.assertIn(s, text)
 
 
