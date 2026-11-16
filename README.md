@@ -1,4 +1,4 @@
-# Agile
+# Agile Skills
 
 A Claude Code and Codex plugin of Agile project-management [Agent Skills](https://agentskills.io).
 
