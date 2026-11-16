@@ -48,6 +48,10 @@ class TemplateTests(unittest.TestCase):
             self.assertNotIn("audio", s)
         self.assertGreater(dk.total_frames(deck), 0)
 
+    def test_tsconfig_lib_covers_es2020(self):
+        cfg = json.loads((TEMPLATE / "tsconfig.json").read_text(encoding="utf-8"))
+        self.assertEqual(cfg["compilerOptions"]["lib"], ["ES2020", "DOM"])
+
     def test_timing_formula_shared(self):
         timing = (TEMPLATE / "src" / "timing.ts").read_text(encoding="utf-8")
         self.assertIn("Math.ceil(", timing)
