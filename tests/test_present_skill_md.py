@@ -57,6 +57,11 @@ class PresentSkillMdTests(unittest.TestCase):
                   "PRESENTATION"):
             self.assertIn(s, text)
 
+    def test_env_path_is_quoted(self):
+        text = SKILL.read_text(encoding="utf-8")
+        self.assertIn('. "<root>/.env"', text)
+        self.assertNotIn(". <root>/.env", text)
+
     def test_slides_and_narration_rules(self):
         text = (REFERENCES / "slides-and-narration.md").read_text(encoding="utf-8")
         for s in ("only what the input says", "150 words"):

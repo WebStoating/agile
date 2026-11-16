@@ -36,7 +36,7 @@ notes folders often contain spaces.
 **Keys.** Never print, echo or store the value of `ELEVENLABS_API_KEY` or `REMOTION_LICENSE_KEY`, and never
 put one on a command line as literal text. Report only present or absent. When a key lives in `<root>/.env`
 rather than the environment, load that file into the environment of the command that needs it without
-showing it (in a POSIX shell: `set -a; . <root>/.env; set +a; <command>`).
+showing it (in a POSIX shell: `set -a; . "<root>/.env"; set +a; <command>`).
 
 ## Step 0: Preflight (always first)
 
