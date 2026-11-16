@@ -95,6 +95,17 @@ class SettingsTests(unittest.TestCase):
         with self.assertRaises(SettingsError):
             settings.load(self.root)
 
+    def test_bad_field_types(self):
+        for data in ({"default_preset": 3, "presets": {"a": {}}},
+                     {"presets": {"a": {"output": 5}}},
+                     {"presets": {"a": "standup"}}):
+            (self.root / ".present.json").write_text(json.dumps(data), encoding="utf-8")
+            with self.assertRaises(SettingsError, msg=json.dumps(data)):
+                settings.load(self.root)
+        (self.root / ".present.json").write_text(
+            json.dumps({"default_preset": "a", "presets": {"a": {"output": "{stem}.mp4"}}}), encoding="utf-8")
+        settings.load(self.root)
+
     def _cli(self, *args):
         return subprocess.run([sys.executable, "-I", str(CLI), *args], capture_output=True,
                               text=True, encoding="utf-8")
@@ -141,6 +152,31 @@ class SettingsTests(unittest.TestCase):
         out = json.loads(r.stdout)
         self.assertEqual(out["status"], "ok")
         self.assertTrue(out["output_path"].endswith("PRESENTATION.mp4"))
+
+    def test_cli_preset_output_and_override(self):
+        notes = self.root / "n.md"
+        notes.write_text("x", encoding="utf-8")
+        (self.root / ".present.json").write_text(
+            json.dumps({"presets": {"weekly": {"output": "{preset}-{date}.mp4"}}}), encoding="utf-8")
+        out = json.loads(self._cli("resolve", "--input", str(notes), "--today", "2026-11-16").stdout)
+        self.assertEqual(out["output_path"], str(self.root / "weekly-2026-11-16.mp4"))
+        out = json.loads(self._cli("resolve", "--input", str(notes), "--output", "{stem}-x.mp4").stdout)
+        self.assertEqual(out["output_path"], str(self.root / "n-x.mp4"))
+
+    def test_cli_bad_types_and_os_errors(self):
+        notes = self.root / "n.md"
+        notes.write_text("x", encoding="utf-8")
+        (self.root / ".present.json").write_text(
+            json.dumps({"presets": {"a": {"output": ["x"]}}}), encoding="utf-8")
+        r = self._cli("resolve", "--input", str(notes))
+        self.assertEqual(r.returncode, 1)
+        self.assertTrue(r.stderr.startswith("ERROR"), r.stderr)
+        pj = self.root / "p.json"
+        pj.write_text("{}", encoding="utf-8")
+        r = self._cli("save", "--root", str(self.root / "missing"), "--preset", "s", "--json-file", str(pj))
+        self.assertEqual(r.returncode, 1)
+        self.assertTrue(r.stderr.startswith("ERROR"), r.stderr)
+        self.assertNotIn("Traceback", r.stderr)
 
 
 if __name__ == "__main__":

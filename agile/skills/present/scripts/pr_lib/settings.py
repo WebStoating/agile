@@ -39,6 +39,13 @@ def load(root: Path) -> dict:
     presets = data.setdefault("presets", {})
     if not isinstance(presets, dict):
         raise SettingsError(f"{path}: 'presets' must be an object")
+    if data.get("default_preset") is not None and not isinstance(data["default_preset"], str):
+        raise SettingsError(f"{path}: 'default_preset' must be a string")
+    for name, preset in presets.items():
+        if not isinstance(preset, dict):
+            raise SettingsError(f"{path}: preset {name!r} must be an object")
+        if preset.get("output") is not None and not isinstance(preset["output"], str):
+            raise SettingsError(f"{path}: preset {name!r}: 'output' must be a string")
     data.setdefault("version", 1)
     return data
 

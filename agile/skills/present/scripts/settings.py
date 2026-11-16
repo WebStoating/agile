@@ -29,8 +29,6 @@ def cmd_resolve(args) -> int:
     data = st.load(root)
     status, name = st.resolve_preset(data, args.preset)
     preset = data["presets"][name] if name else {}
-    if not isinstance(preset, dict):
-        raise st.SettingsError(f"preset {name!r} must be an object")
     fmt = args.output or preset.get("output")
     out = st.resolve_output(fmt, input_path, cwd, name, today)
     settings_path = root / st.SETTINGS_NAME
@@ -88,7 +86,7 @@ def main(argv=None) -> int:
     args = ap.parse_args(argv)
     try:
         return args.func(args)
-    except (st.SettingsError, ValueError) as e:
+    except (st.SettingsError, ValueError, OSError) as e:
         print(f"ERROR {e}", file=sys.stderr)
         return 1
 
