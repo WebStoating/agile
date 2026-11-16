@@ -1,4 +1,6 @@
 import json
+import os
+import stat
 import subprocess
 import sys
 import tempfile
@@ -66,6 +68,18 @@ class SettingsTests(unittest.TestCase):
         self.assertEqual(data["default_preset"], "weekly")
         self.assertTrue(path.read_text(encoding="utf-8").endswith("\n"))
         self.assertEqual(sorted(p.name for p in self.root.iterdir()), [".present.json"])
+
+    @unittest.skipIf(os.name == "nt", "POSIX file modes")
+    def test_save_keeps_file_mode(self):
+        old = os.umask(0o022)
+        try:
+            path = settings.save_preset(self.root, "a", {}, False)
+        finally:
+            os.umask(old)
+        self.assertEqual(stat.S_IMODE(path.stat().st_mode), 0o644)
+        path.chmod(0o640)
+        settings.save_preset(self.root, "b", {}, False)
+        self.assertEqual(stat.S_IMODE(path.stat().st_mode), 0o640)
 
     def test_corrupt_file(self):
         p = self.root / ".present.json"

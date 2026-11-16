@@ -2,6 +2,7 @@
 import json
 import os
 import re
+import stat
 import tempfile
 from datetime import date
 from pathlib import Path
@@ -42,16 +43,27 @@ def load(root: Path) -> dict:
     return data
 
 
+def _file_mode(path: Path) -> int:
+    try:
+        return stat.S_IMODE(path.stat().st_mode)
+    except OSError:
+        umask = os.umask(0)
+        os.umask(umask)
+        return 0o666 & ~umask
+
+
 def save_preset(root: Path, name: str, preset: dict, make_default: bool) -> Path:
     data = load(root)
     data["presets"][name] = preset
     if make_default:
         data["default_preset"] = name
     path = Path(root) / SETTINGS_NAME
+    mode = _file_mode(path)
     fd, tmp = tempfile.mkstemp(prefix=".present-", suffix=".tmp", dir=str(path.parent))
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as f:
             f.write(json.dumps(data, indent=2, ensure_ascii=False) + "\n")
+        os.chmod(tmp, mode)  # mkstemp creates 0600; keep the mode a plain write would give
         os.replace(tmp, path)
     except BaseException:
         try:
